@@ -19,10 +19,11 @@ document.getElementById("checkout-form").addEventListener("submit", async functi
         merchant: { name: "Loja do Lojista", cnpj: "0561203165498", mcc: "2999" },
         paymentInformation: {
             card: {
-                type: "001", // Tipo de cartão (VISA)
-                number: cardDetails.cardNumber,
+                type: "003",  // Exemplo para Visa
+                number: cardDetails.cardNumber.trim(),
                 expirationMonth: cardDetails.expiryMonth,
                 expirationYear: cardDetails.expiryYear,
+                securityCode: cardDetails.cvv.trim(), // Adicione o CVV
             },
         },
     };
@@ -70,7 +71,7 @@ window.addEventListener("message", async (event) => {
                 // Realizar a chamada de Enrollment após a coleta de dados
                 const enrollmentPayload = {
                     clientReferenceInformation: {
-                        code: "cybs_test"
+                        code: "123456"
                     },
                     orderInformation: {
                         amountDetails: {
