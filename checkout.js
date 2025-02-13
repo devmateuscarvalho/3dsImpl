@@ -19,11 +19,11 @@ document.getElementById("checkout-form").addEventListener("submit", async functi
         merchant: { name: "Loja do Lojista", cnpj: "0561203165498", mcc: "2999" },
         paymentInformation: {
             card: {
-                type: "003",  // Exemplo para Visa
-                number: cardDetails.cardNumber.trim(),
+                type: "001", // Tipo de cartão (VISA)
+                number: cardDetails.cardNumber,
                 expirationMonth: cardDetails.expiryMonth,
                 expirationYear: cardDetails.expiryYear,
-                securityCode: cardDetails.cvv.trim(), // Adicione o CVV
+                bin: "12123123123"
             },
         },
     };
@@ -71,7 +71,7 @@ window.addEventListener("message", async (event) => {
                 // Realizar a chamada de Enrollment após a coleta de dados
                 const enrollmentPayload = {
                     clientReferenceInformation: {
-                        code: "123456"
+                        code: "cybs_test"
                     },
                     orderInformation: {
                         amountDetails: {
@@ -113,7 +113,8 @@ window.addEventListener("message", async (event) => {
                             type: "001",
                             expirationMonth: cardDetails.expiryMonth,
                             expirationYear: cardDetails.expiryYear,
-                            number: cardDetails.cardNumber
+                            number: cardDetails.cardNumber,
+                            bin: "12123123123"
                         }
                     },
                     buyerInformation: {
@@ -155,7 +156,13 @@ window.addEventListener("message", async (event) => {
                         requestorName: "",
                         referenceId: setupPayerAuthData.consumerAuthenticationInformation.referenceId || "",
                         transactionMode: "MOTO"
+                    },
+                    merchant: {
+                        name: "Loja do Lojista",
+                        cnpj: "0561203165498",
+                        mcc: "2999"
                     }
+
                 };
 
                 try {
