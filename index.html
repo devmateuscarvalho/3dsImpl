@@ -14,14 +14,24 @@
 
         <form id="checkout-form">
             <!-- Campos de pagamento -->
+            <label class="block mb-2 font-semibold">Client reference info code</label>
+            <input type="text" id="code" class="w-full border p-2 mb-4 rounded" placeholder="123" value="123"
+                required />
+
             <label class="block mb-2 font-semibold">Número do Cartão</label>
             <input type="text" id="card-number" class="w-full border p-2 mb-4 rounded" placeholder="0000 0000 0000 0000"
                 required />
 
+
+            <label class="block mb-2 font-semibold">Tipo do Cartão</label>
+            <input type="text" id="card-type" class="w-full border p-2 mb-4 rounded" placeholder="001" required />
+
             <label class="block mb-2 font-semibold">Data de Validade</label>
             <div class="flex gap-4 mb-4">
-                <input type="text" id="expiry-month" class="border p-2 rounded w-1/2" placeholder="MM" value="10" required />
-                <input type="text" id="expiry-year" class="border p-2 rounded w-1/2" placeholder="YYYY" value="2025" required />
+                <input type="text" id="expiry-month" class="border p-2 rounded w-1/2" placeholder="MM" value="10"
+                    required />
+                <input type="text" id="expiry-year" class="border p-2 rounded w-1/2" placeholder="YYYY" value="2025"
+                    required />
             </div>
 
             <label class="block mb-2 font-semibold">Código de Segurança (CVV)</label>
@@ -32,13 +42,16 @@
                 class="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700">Pagar</button>
         </form>
 
+        <form id="post-form" method="post">
+            <input type="hidden" name="transactionId" id="transactionId">
+        </form>
+
         <!-- Iframe escondido para coleta de dados -->
         <iframe id="ddc-iframe" name="ddc-iframe" height="1" width="1" style="display: none;"></iframe>
         <form id="ddc-form" target="ddc-iframe" method="POST" style="display: none;">
             <input type="hidden" name="JWT" id="jwt-token" />
         </form>
     </div>
-
     <script src="checkout.js"></script>
 </body>
 
