@@ -94,12 +94,30 @@ window.addEventListener("message", async (event) => {
                         amountDetails: {
                             currency: "BRL",
                             totalAmount: "10.99",
-                            lineItems: [
-                                {
-                                    totalAmount: "10.99"
-                                }
-                            ]
                         },
+                        lineItems: [
+                            {
+                                "unitPrice": 50.0,
+                                "quantity": 2,
+                                "productSKU": "SKU123",
+                                "productName": "Produto A",
+                                "productCode": "CODE123"
+                            },
+                            {
+                                "unitPrice": 30.0,
+                                "quantity": 3,
+                                "productSKU": "SKU456",
+                                "productName": "Produto B",
+                                "productCode": "CODE456"
+                            },
+                            {
+                                "unitPrice": 120.0,
+                                "quantity": 1,
+                                "productSKU": "SKU789",
+                                "productName": "Produto C",
+                                "productCode": "CODE789"
+                            }
+                        ],
                         billTo: {
                             address1: "1 Market St",
                             address2: "Suite 100",
