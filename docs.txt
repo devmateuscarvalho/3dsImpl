@@ -1,0 +1,340 @@
+3DSecure
+Bem vindos a documentação do 3DSecure da Global Chargeback!
+Toda requisição para Globalcbk necessita de autenticação, no caso do Antifraude, solicitamos o envio no header a sua ClientId e ClientKey.
+A autenticação no ambiente sandbox será com a mesma ClientId e ClientKey, porém em rotas diferentes:
+sandbox: {baseUrl}/sandbox/antifraud/…
+produção: {baseUrl}/antifraud/…
+SDK Mobile Para integrar sua aplicação mobile com 3DS, solicite a disponibilização do SDK (Android e IOS) e da documentação, ao seu representante técnico na Global Chargeback.
+Fluxo Sugerido:
+
+1. Setup Payer Auth
+No início do fluxo de autenticação de uma transação, deve ser realizada a chamada ao endpoint de setup payer auth, para iniciar o processo:
+POST: {baseUrl}/sandbox/antifraud/3ds/setup
+Todos os campos abaixo são obrigatórios
+REQUEST PAYLOAD 
+{
+    "clientReferenceInformation": {
+        "code": "123456"
+        //Referência ou número de rastreamento do pedido gerado pelo comerciante. 
+        //Recomenda-se que você envie um valor único para cada transação, 
+        //para que possa realizar buscas significativas pela transação.
+    },
+    "merchant": {
+        // Informações da loja que está vendendo os produtos.
+        // Padronize esses dados para manter o controle de suas lojas em nosso sistema.
+        "name": "Loja do Lojista",
+        "cnpj": "0561203165498",
+        "mcc": "2999"
+        // mcc = Identificador do tipo de negócio.
+    },
+    "paymentInformation": {
+        "card": {
+            "type": "001",
+            "number": "402400XXXXXX2382",
+            "expirationMonth": "12",
+            "expirationYear": "2020"
+        }
+    }
+}
+Cartões para teste (qualquer data expiração a partir do dia atual):
+NúmeroCVV4622 9431 2701 37058384622 9431 2701 37130434622 9431 2701 3721258Teremos três possíveis retornos para requisições encaminhadas corretamente, são eles:
+Parâmetro Status na APIMensagem processada com sucesso.COMPLETEDFalha na requisição, verifique detalhes.FAILEDSolicitação contém dados inválidosINVALID_REQUESTExemplo de resposta:
+RESPONSE 
+{
+    "clientReferenceInformation": {
+        "code": "123456"
+    },
+    "consumerAuthenticationInformation": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxY2Q0Mzc1Ni05NjBiLTQzZjYtYTliMS1hODQ4OWIxOWJlN2MiLCJpYXQiOjE2MTgwMDMyOTMsImlzcyI6IjVkZDgzYmYwMGU0MjNkMTQ5OGRjYmFjYSIsImV4cCI6MTYxODAwNjg5MywiT3JnVW5pdElkIjoiNWI5YzRiYjNmZjYyNmIxMzQ0ODEwYTAxIiwiUmVmZXJlbmNlSWQiOiJhODBmNDI4ZC1lOGIyLTRhMDYtOGIzYS1hYzhhZDI2MzkxOGIifQ.zXOb5j1B2liXX0O8E7Px3RW8gr7XODj0cfbljRm4krE",
+        "deviceDataCollectionUrl": "https://centinelapistag.cardinalcommerce.com/V1/Cruise/Collect",
+        "referenceId": "a80f428d-e8b2-4a06-8b3a-ac8ad263918b",
+        "token": "AxizbwSTTwUviabJHiPmABEBURxA/B9GAES4ZNJMvRiuZhTAGAAAYQGS"
+    },
+    "id": "6180032933336226604006",
+    "status": "COMPLETED",
+    "submitTimeUtc": "2021-04-09T21:21:33Z"
+}
+2. Processar a URL de coleta de dados no Front-end
+A URL e o Access Token recebidos na resposta do Setup, serão utilizados para inicializar o iframe de Device Data Collection.
+2.1. Iniciar um form POST em um “hidden” iframe.
+O form Action e o parametro JWT devem ser alterados com o valor recebido na URL e AccessToken.
+IFRAME 
+iframe name=”ddc-iframe” height="1" width="1" style="display: none;">
+</iframe>
+<form id="ddc-form" target=”ddc-iframe” method="POST"
+action="https://centinelapistag.cardinalcommerce.com/V1/Cruise/
+Collect">
+<input type="hidden" name="JWT" value="
+eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YWZiNGRkY2ZmNjI2YjIzNzA2OWZhM2QiLCJpYX
+QiOjE1OTExMTgyNzIsImV4cCI6MTU5MTEyNTQ3MiwianRpIjoiNWU4MDg5MGEtN2UyNi00Z
+mI3LThiYTUtNjQ2ZDU0NjJiMzBkIiwiUGF5bG9hZCI6eyJBY3Rpb25Db2RlIjoiU1VDQ0VT
+UyIsIlNlc3Npb25JZCI6IjY0ZTY2NjQ4LTFkYzYtNDZjMS1hNGYzLTBkYzE2MzQwZmFmMTA
+iLCJFcnJvck51bWJlciI6MCwiRXJyb3JEZXNjcmlwdGlvbiI6IlN1Y2Nlc3MifX0.j8EPWE
+EDf85hYQcxFzXxmHqHFTlptSQITJgfBGtLLjA" />
+</form>
+2.2. Adicionar Java Script para enviar o formulario acima.
+SCRIPT ENVIAR FORMULARIO 
+<script>
+window.onload = function() {
+var ddcForm = document.querySelector('#ddc-form');
+if(ddcForm) // ddc form exists
+ddcForm.submit();
+}
+</script>
+2.3. Criar um Listener para o retorno do Device Data Collection.
+Ao receber uma resposta da URL de Device Data Collection, significa que o processo foi finalizado. A resposta é um evento de callback que possui uma menssagem com o status do processo de Device Data Collection.
+IMPORTANTE: A URL varia de acordo com o ambiente:
+Teste: https://centinelapistag.cardinalcommerce.com
+Produção: https://centinelapi.cardinalcommerce.com
+SCRIPT LISTENER 
+<script>
+window.addEventListener("message", (event) => {
+ if (event.origin === "https://centinelapistag.cardinalcommerce.com") {
+ let data = JSON.parse(event.data);
+ console.log('Merchant received a message:', data);
+ if (data !== undefined && data.Status) {
+ console.log('Songbird ran DF successfully');
+ }
+ } else{
+ console.log('Message from different origin.');
+ }
+ }, false);
+ <script/>
+Payload do Callback:
+{
+    "MessageType": "profile.completed",
+    "Session Id": "f54ea591-51ac-48de-b908-eecf4ff6beff",
+    "Status": true
+}
+3. Efetuar a chamada ao Enrollment do 3DS
+Este passo descreve a chamada via backend que será realizada para solicitar a autenticação da transação. Deve ser executada sempre após a execução de todos os itens dos passos anteriores. Os campos descritos abaixo são os minimos/obrigatórios, para que a transação siga no fluxo de verificação.
+POST: {baseUrl}/sandbox/antifraud/3ds/authentications
+Todos os campos abaixo são obrigatórios
+REQUEST PAYLOAD 
+{
+  "clientReferenceInformation": {
+    "code": "cybs_test"
+  },
+  "orderInformation": {
+    "amountDetails": {
+      "currency": "BRL",
+      "totalAmount": "10.99"
+    },
+    "lineItems": [
+     {         
+      "unitPrice": "144.14",
+      "quantity": "2",
+      "productSKU": "123456",
+      "productName": "teste",
+      "productCode": "1234"
+      }
+    ],
+    "billTo": {
+      "address1": "1 Market St",
+      "administrativeArea": "CA",
+      "country": "US",
+      "locality": "san francisco",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phoneNumber": "4158880000",
+      "email": "test@cybs.com",
+      "postalCode": "94105"
+    }
+  },
+  "paymentInformation": {
+    "card": {
+      "type": "001",
+      "expirationMonth": "12",
+      "expirationYear": "2025",
+      "number": "XXXXXXXXXXXXXXXX"
+    }
+  },
+  "buyerInformation": {
+    "merchantCustomerId": "",
+    "mobilePhone": "1245789632"
+  },
+  "deviceInformation": {
+    "ipAddress": "",
+    "httpAcceptBrowserValue": "",
+    "httpAcceptContent": "",
+    "httpBrowserLanguage": "",
+    "httpBrowserJavaEnabled": "",
+    "httpBrowserJavaScriptEnabled": "",
+    "httpBrowserColorDepth": "",
+    "httpBrowserScreenHeight": "",
+    "httpBrowserScreenWidth": "",
+    "httpBrowserTimeDifference": "",
+    "userAgentBrowserValue": ""
+  },
+  "merchantInformation": {
+    "merchantDescriptor": {
+      "url": ""
+    },
+    "merchantName": ""
+  },
+  "acquirerInformation": {
+    "acquirerBin": "",
+    "merchantId": ""
+  },
+  "consumerAuthenticationInformation": {
+    "deviceChannel": "",
+    "mcc": "",
+    "messageCategory": "",
+    "overridePaymentMethod": "",
+    "productCode": "",
+    "returnUrl": "",
+    "requestorId": "",
+    "requestorName": "",
+    "referenceId": "",
+    "transactionMode": "MOTO"
+  }
+}
+Caso todos os campos especificados no item anterior sejam enviados com valor e formato correto, a mensagem de requisição será processada e vai gerar uma resposta com os campos abaixo.
+Obs.: Para casos em que ocorra uma exceção (dados faltantes/inválidos), verifique documentação completa da Globalcbk para os tratamentos. Foram detalhados os campos mais relevantes da resposta.
+RESPONSE 
+{
+    "clientReferenceInformation": {
+        "code": "398b4815-19ed-425e-a7b2-1781c24289f4"
+    },
+    "consumerAuthenticationInformation": {
+        "eciRaw": "05",
+        "authenticationTransactionId": "Uym2iO2tq8zmRD3o13h0",
+        "strongAuthentication": {
+            "OutageExemptionIndicator": "0"
+        },
+        "eci": "05",
+        "token": "AxjzbwSTcFEDvSNUaagZ/+MBURy2OE7z7QfIYEQyaSZejFyPaiAKAAAAxQLR",
+        "cavv": "Y2FyZGluYWxjb21tZXJjZWF1dGg=",
+        "paresStatus": "Y",
+        "acsReferenceNumber": "Cardinal ACS",
+        "xid": "Y2FyZGluYWxjb21tZXJjZWF1dGg=",
+        "directoryServerTransactionId": "aa1d6c24-a0bf-4e67-9695-19714997a34a",
+        "veresEnrolled": "Y",
+        "threeDSServerTransactionId": "6aa9174a-bb21-4175-bf68-e50445ac7d72",
+        "acsOperatorID": "MerchantACS",
+        "ecommerceIndicator": "vbv",
+        "specificationVersion": "2.1.0",
+        "acsTransactionId": "ba4a1f0b6f7f-4e00-9510-7c01052c8789"
+    },
+    "id": "6794239536626555004953",
+    "paymentInformation": {
+        "card": {
+            "bin": "400000",
+            "type": "VISA"
+        }
+    },
+    "status": "AUTHENTICATION_SUCCESSFUL",
+    "submitTimeUtc": "2023-03-21T18: 39: 14Z"
+}
+4. Processamento de um Desafio
+Quando o retorno da solicitação de autenticação indicar a necessidade de processar um desafio, deverá ser efetuada a operação no cliente, através da função abaixo.
+4.1 - Realizar o decode do dado base64URL retornado no campo consumerAuthentication.paReq. No dado decodificado buscar o valor de challengeWindowSize. O dado retornado indica o tamanho iframe de desafio, conforme tabela abaixo.
+Challenge Window SizeStep-up iframe Dimensions (Width x Height)01250 x 40002390 x 40003500 x 60004600 x 40005Full Screen4.2 - Iniciar um form POST em um “hidden” iframe. OBS: o form Action e o parametro JWT devem ser alterados com o valor recebido na stepUpUrl e AccessToken. O Height e Width deve levar em consideração a tabela do item (a).
+<iframe name=” ”step-up-iframe” height=“250" width=“400"></iframe>
+<form id=""step-up-form" target=” ”step-up-iframe” method="POST"
+Action=“https://centinelapistag.cardinalcommerce.com/V2/Cruise/StepUp">
+<input type="hidden" name="JWT" value="
+eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YWZiNGRkY2ZmNjI2YjIzNzA2OWZhM2QiLCJpYX
+QiOjE1OTExMTgyNzIsImV4cCI6MTU5MTEyNTQ3MiwianRpIjoiNWU4MDg5MGEtN2UyNi00Z
+mI3LThiYTUtNjQ2ZDU0NjJiMzBkIiwiUGF5bG9hZCI6eyJBY3Rpb25Db2RlIjoiU1VDQ0VT
+UyIsIlNlc3Npb25JZCI6IjY0ZTY2NjQ4LTFkYzYtNDZjMS1hNGYzLTBkYzE2MzQwZmFmMTA
+iLCJFcnJvck51bWJlciI6MCwiRXJyb3JEZXNjcmlwdGlvbiI6IlN1Y2Nlc3MifX0.j8EPWE
+EDf85hYQcxFzXxmHqHFTlptSQITJgfBGtLLjA" />
+</form>
+4.3 - Adicionar Javascript para invocar o formulário do desafio.
+<script>
+window.onload = function() { var stepUpForm = document.querySelector('# step-up-form'); if(stepUpForm) // Step-Up form
+exists stepUpForm.submit(); }
+</script>
+4.4 - O retorno do desafio, será enviado para a URL de callback definida e enviada na chamada, com os seguintes dados..
+TransactionId=BwNsDeDPsQV4q8uy1Kq1&
+MD=null
+IMPORTANTE: O transactionID é o valor recebido no retorno do desafio, será utilizado no próximo passo (Validate) para recuperar o resultado do desafio.
+5. Validar o Resultado da Autenticação.
+Para receber o resultado do desafio, será necessário realizar a chamada de authentication-results utilizando os dados recebidos na URL de callback do desafio.
+POST: {baseUrl}/sandbox/antifraud/3ds/authentications-results
+Todos os campos abaixo são obrigatórios
+{
+ "clientReferenceInformation": {
+ "code": "123456"
+ },
+"consumerAuthenticationInformation": {
+ "authenticationTransactionId": "yX2oPizvbGxeoB00AOl1"
+ } // TransactionId recebido no callback do desafio.
+}
+6. Apêndice.
+Campos relevantes para a avaliação do fluxo de autenticação
+a. Retorno da Elegibilidade à Autenticação.
+Campo vres_enrolled:
+Y – Yes, Bank is participating in 3-D Secure protocol and will return the ACSUrl
+N – No, Bank is not participating in 3-D Secure protocol
+U – Unavailable, The DS or ACS is not available for authentication at the time of the request
+B – Bypass, Merchant authentication rule is triggered to bypass authentication in this use case
+b. Identificação do Status de Retorno da Autenticação.
+Campo consumerAuthenticationInformation.paresStatus:
+Y – Successful Authentication
+N – Failed Authentication / Account Not Verified / Transaction Denied
+U –Unable to Complete Authentication
+A – Successful Attempts Transaction
+C – Challenge Required for Authentication
+R – Authentication Rejected (Merchant must not submit for authorization)
+D – Challenge Required; Decoupled Authentication confirmed.
+I – Informational Only; 3DS Requestor challenge preference acknowledged.
+c. Indicador de Autenticação.
+Campo consumerAuthenticationInformation.eciRaw:
+02 or 05 – Fully Authenticated Transaction
+01 or 06 – Attempted Authentication Transaction
+00 or 07 – Non 3-D Secure Transaction
+04 – Data Only
+d. Razão dos Status da Transação
+Campo Status:
+AUTHENTICATION_SUCCESSFUL
+PENDING_AUTHENTICATION
+INVALID_REQUEST
+AUTHENTICATION_FAILED
+INFORMATIONAL ONLY
+Campo errorInformation.reason:
+INVALID_MERCHANT_CONFIGURATION
+CONSUMER_AUTHENTICATION_REQUIRED
+CONSUMER_AUTHENTICATION_FAILED
+AUTHENTICATION_FAILED
+e. Informações Complementares para melhor experiência de Autenticação
+Campo consumerAuthenticationInformation.cardholderMessage
+Mensagem de texto fornecida pelo ACS/Emissor para o portador durante um processo de autenticação Frictionless. Envio da informação opcional para o emissor.
+7. Cenários dos Fluxos de Autenticação 2.0
+Quando vres_enrolled = N – Emissor não participante do Protocolo 2.x 
+Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação não Segura (não autenticada).
+Quando vres_enrolled = U – Indisponível, Campos do 3DS inválidos
+Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação Não Segura (não autenticada) e directoryServerErrorCode e directoryServerErrorDescription com maior detalhamento do motivo.
+Obs.: Importante verificar os campos mandatórios e seus respectivos conteúdos.
+Desafio Requerido (Challenge)
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = PENDING_AUTHENTICATION
+Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação não Segura (não autenticada).
+Autenticação Declínada
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = AUTHENTICATION_FAIL 
+E, Campo consumerAuthenticationInformation.paresStatus = R – Autenticação Rejeitada Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação não Segura (não autenticada)
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = AUTHENTICATION_FAIL 
+E, Campo consumerAuthenticationInformation.paresStatus = N – Falha na Autenticação
+Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação não Segura (não autenticada).
+Autenticação Processada
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = AUTHENTICATION_SUCCESSFUL
+E, Campo consumerAuthenticationInformation.paresStatus = A – Attempt
+Então, Campo consumerAuthenticationInformation.eciRaw = 06/01
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = AUTHENTICATION_SUCCESSFUL
+E, Campo consumerAuthenticationInformation.paresStatus = Y – Autenticação com Sucesso Então, Campo consumerAuthenticationInformation.eciRaw = 05/02 – Transação Segura (autenticada)
+Quando vres_enrolled = Y – Emissor participante do Protocolo 3DS 2.x
+E, Campo Status = AUTHENTICATION_SUCCESSFUL
+E, Campo consumerAuthenticationInformation.paresStatus = U – Autenticação não completa Então, Campo consumerAuthenticationInformation.eciRaw = 07/00 – Transação não Segura (não autenticada)
+Ou Campo consumerAuthenticationInformation.eciRaw = 04 – Mastercard DataOnly (não autenticada)
+8. Informações Adicionais
+Dados de Adquirente e Registro nas Bandeiras:
+Os dados de adquirente (AcquirerBIN, AcquirerMID, MCC) devem ser solicitados ao adquirente que fará o processo de autorização com as bandeiras.
+Algumas bandeiras como Mastercard e ELO, solicitam um cadastramento prévio do estabelecimento para participação no programa 3DS 2. Este cadastramento é sempre realizado pelo adquirente.
+Para formatação dos dados de requestorID e requestorName, converse com seu representante técnico na GlobalCbk.
+Card Types:
+NumeroBandeira001Visa002Mastercard, Eurocard003American Express004Discover005Diners Club006Carte Blanche007JCB014EnRoute021JAL024Maestro (UK Domestic)033Visa Electron (SIX)034Dankort036Cartes Bancaires037Carta Si039Encoded account number040UATP042Maestro (International)050Hipercard051Aura054Elo058Carnet062China UnionPay

@@ -154,7 +154,7 @@ window.addEventListener("message", async (event) => {
                     },
                     buyerInformation: {
                         merchantCustomerId: "",
-                        mobilePhone: "1245789632"
+                        mobilePhone: "5548998009100"
                     },
                     deviceInformation: {
                         ipAddress: "",
