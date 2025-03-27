@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 const CheckoutForm = ({ onSubmit }) => {
     const [formData, setFormData] = useState({
-        code: '2021102509',
-        cardNumber: '4000000000002503',
-        cardType: '001',
+        code: '',
+        cardNumber: '',
+        cardType: '',
         expiryMonth: '10',
-        expiryYear: '2025',
+        expiryYear: '2030',
         cvv: '123'
     });
 
@@ -21,7 +21,6 @@ const CheckoutForm = ({ onSubmit }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Prepare the data format expected by the payment handler
         const paymentData = {
             cardDetails: {
                 cardNumber: formData.cardNumber,
