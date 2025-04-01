@@ -186,7 +186,7 @@ function App() {
                         locality: "san francisco",
                         firstName: "John",
                         lastName: "Doe",
-                        phoneNumber: "4158880000",
+                        phoneNumber: "5548998009100",
                         email: "test@cybs.com",
                         postalCode: "94105"
                     },
@@ -209,15 +209,15 @@ function App() {
                         expirationMonth: paymentData.cardDetails.expiryMonth,
                         expirationYear: paymentData.cardDetails.expiryYear,
                         number: paymentData.cardDetails.cardNumber,
-                        bin: paymentData.cardDetails.cardNumber.substring(0, 6) // Extrai BIN do número do cartão
+                        bin: paymentData.cardDetails.cardNumber.substring(0, 6)
                     }
                 },
                 buyerInformation: {
-                    merchantCustomerId: "",
+                    merchantCustomerId: "09243562940",
                     mobilePhone: "5548998009100"
                 },
                 deviceInformation: {
-                    ipAddress: "", // Você pode querer preencher isso com o IP real
+                    ipAddress: "192.168.1.100",
                     httpAcceptBrowserValue: navigator.userAgent,
                     httpAcceptContent: navigator.mimeTypes.length > 0 ? navigator.mimeTypes[0].type : "",
                     httpBrowserLanguage: navigator.language,
@@ -232,20 +232,21 @@ function App() {
                 },
                 merchantInformation: {
                     merchantDescriptor: {
-                        url: window.location.origin
+                        url: window.location.origin,
+                        name: "Loja do Lojista"
                     },
                     merchantName: "Loja do Lojista"
                 },
                 acquirerInformation: {
-                    acquirerBin: "",
-                    merchantId: ""
+                    acquirerBin: "001",
+                    merchantId: "255"
                 },
                 consumerAuthenticationInformation: {
                     deviceChannel: "browser",
                     mcc: "2999",
                     messageCategory: "01",
-                    overridePaymentMethod: "",
-                    productCode: "",
+                    overridePaymentMethod: "02",
+                    productCode: "PHY",
                     returnUrl: "http://localhost:5000/challenge-response",
                     requestorId: "",
                     requestorName: "",
