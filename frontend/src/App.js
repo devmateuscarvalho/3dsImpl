@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CheckoutForm from './components/CheckoutForm';
 
 function App() {
@@ -9,9 +9,9 @@ function App() {
     const [enrollmentData, setEnrollmentData] = useState(null);
     const [transactionId, setTransactionId] = useState(null);
     const ddcIframeRef = useRef(null);
-    const clientId = "f9561d17-2c3e-4878-8831-987575b2ad44";
-    const clientKey = "8127bd6473c5b7675649ac05e55891caa1006181";
-    const API_URL = 'http://localhost:8123/sandbox/antifraud/3ds';
+    const clientId = "";
+    const clientKey = "";
+    const API_URL = 'https://antifraud.paylab.com.br/sandbox/antifraud/3ds';
     const [validationStatus, setValidationStatus] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentStep, setCurrentStep] = useState('form');
